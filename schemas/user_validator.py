@@ -3,13 +3,14 @@ from typing import Optional
 import re
 import os
 from dotenv import load_dotenv
+from settings import settings
 
 
 class UserValidator(BaseModel):
     username : str = Field(max_length=9,min_length=3)
     password : str
     email : EmailStr
-    superkey : str
+    superkey : Optional[str] = False
     
     @field_validator('password')
     @classmethod
@@ -21,7 +22,9 @@ class UserValidator(BaseModel):
     
     @validator('superkey')
     def validate_superkey(cls,value):
-        result=os.getenv('superkey')
+        if not value:
+            return False
+        result=settings.superkey
         if value==result:
             return True
         raise ValueError('Incorrect Superkey')
