@@ -31,6 +31,9 @@ class User(db.Model):
         return create_access_token(identity=self.user_id,
                                 additional_claims={'exp':datetime.utcnow()+timedelta(minutes=exp),
                                                     'aud': aud})
+    
+    def set_password(self,password):
+        self.password=pbkdf2_sha256.hash(password)
 
     
         
