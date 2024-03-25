@@ -6,22 +6,20 @@ from book.book_model import Book
 from flask import g 
 from flask_jwt_extended.exceptions import JWTDecodeError
 from book.utils import authorize_user
+from schemas.book_validator import BookValidator
+from flask import request
+from book.book_model import Book
 
 
 
+api=Api(app=app, title='Book Api',security='apiKey', doc="/docs")
 
-api=Api(app=app, title='Cart Api',security='apiKey', doc="/docs")
-
-@api.route('/addbook')
+@api.route('/add')
 class AddingBookApi(Resource):
 
-    method_decorators=[authorize_user]
     @api.expect(api.model('adding book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
     def post(self):
         try:
-            if not g.user['is_superuser']:
-                return {"message": "Access denied to perform this operation", "status": 403}, 403
-            data = request.json
             serializer=BookValidator(**request.json)
             data=serializer.model_dump()
             book=Book(**data)
@@ -92,5 +90,6 @@ class UpdatingbookApi(Resource):
             return {"message": "Book updated successfully", "status": 200}, 200
         except Exception as e:
             return {"message": str(e), "status": 500}, 500
-
-
+            return {"message":"Book added successfully","data":book.json,"status":201},201
+        except Exception as e:
+            return {"message":str(e),"status code":400},400

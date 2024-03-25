@@ -12,7 +12,9 @@ class Book(db.Model):
     userid=db.Column(db.Integer, nullable=False)
 
     @property
+
     def to_json(self):
+
         return {
             'book_id':self.book_id,
             'title':self.title,
