@@ -6,6 +6,7 @@ from book.book_model import Book
 from flask import g 
 from flask_jwt_extended.exceptions import JWTDecodeError
 from book.utils import authorize_user
+
 from schemas.book_validator import BookValidator
 from flask import request
 from book.book_model import Book
@@ -14,10 +15,10 @@ from book.book_model import Book
 
 api=Api(app=app, title='Book Api',security='apiKey', doc="/docs")
 
-@api.route('/add')
+@api.route('/addbook')
 class AddingBookApi(Resource):
 
-    @api.expect(api.model('adding book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
+    @api.doc(params={"token":"token for adding books"},body=api.model('adding book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
     def post(self):
         try:
             serializer=BookValidator(**request.json)
@@ -35,6 +36,7 @@ class AddingBookApi(Resource):
 @api.route('/getbook')
 class RetreivingBookApi(Resource):
 
+    @api.doc(params={"token":"token for retreiving book data"})
     def get(self,*args,**kwargs):
         try:
             books=Book.query.all()
@@ -50,7 +52,7 @@ class RetreivingBookApi(Resource):
 class DeletingBookApi(Resource):
     method_decorators=[authorize_user]
     
-    @api.expect(api.model("Deleting book",{"title":fields.String()}))
+    @api.doc(params={"token":"token for deleting books"},body=api.model('deleting book',{"title":fields.String()}))
     def delete(self, *args, **kwargs):
         try:
             if not g.user['is_superuser']:
@@ -73,7 +75,7 @@ class DeletingBookApi(Resource):
 @api.route('/updatebook')
 class UpdatingbookApi(Resource):
     method_decorators=[authorize_user]
-    @api.expect(api.model("Updating book",{"title":fields.String(),"author":fields.String(),"quantity":fields.Integer,"price":fields.Integer}))
+    @api.doc(params={"token":"token for updating books"},body=api.model('updating book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
     def put(self, *args, **kwargs):
         try:
             if not g.user['is_superuser']:
@@ -90,6 +92,4 @@ class UpdatingbookApi(Resource):
             return {"message": "Book updated successfully", "status": 200}, 200
         except Exception as e:
             return {"message": str(e), "status": 500}, 500
-            return {"message":"Book added successfully","data":book.json,"status":201},201
-        except Exception as e:
-            return {"message":str(e),"status code":400},400
+        
