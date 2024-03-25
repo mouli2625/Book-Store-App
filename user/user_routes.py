@@ -56,7 +56,7 @@ class UserApi(Resource):
 class LoginApi(Resource):
     
     @api.expect(api.model('logging in',{'username':fields.String(),'password':fields.String()}))
-    def post():
+    def post(self):
         try:
             data=request.get_json()
             user=User.query.filter_by(username=data["username"]).first()
