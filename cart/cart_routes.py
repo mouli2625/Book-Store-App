@@ -85,7 +85,7 @@ class DeletingCart(Resource):
             return {"message":str(e),"status":500},500
         
 
-@api.route('/ordercart')
+@api.route('/ordercart','/cancelcart')
 
 class OrderApi(Resource):
     method_decorators=[authorize_user]
@@ -116,3 +116,30 @@ class OrderApi(Resource):
             return {"message":str(e),"status":400}
         except Exception as e:
             return {"message":str(e),"status":500}
+        
+    @api.doc(params={'id':'cart_id that should be cancelled'})
+    def delete(self,*args,**kwargs):
+        try:
+            userid=g.user['user_id']
+            id=request.args.get('id')
+            cart=Cart.query.filter_by(userid=userid,is_ordered=True,cart_id=id).first()
+            if not cart:
+                return {"message":"cart not found","status":404},404
+            items=cart.items
+            cart_data={}
+            headers={'Content-Type': 'application/json'}
+            for item in items:
+                cart_data[item.bookid]=-1*item.cart_item_quantity
+            order_response=http.patch(f'http://127.0.0.1:7000/updatebooks',
+                                      json=cart_data,headers=headers)
+            if order_response.status_code>=400:
+                return {"message":"Unable to update books","status":400},400
+            for items in cart.items:
+                db.session.delete(item)
+                db.session.commit()
+            db.session.delete(cart)
+            db.session.commit()
+            return {"message":"Order cancelled successfully","status":204},204
+        except Exception as e:
+            return {"message":str(e),"status":500},500
+            
