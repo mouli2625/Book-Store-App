@@ -21,7 +21,16 @@ class User(db.Model):
         self.__dict__.update(kwargs)
         
         
-        
+    @property    
+    def to_json(self):
+        return {
+            "user_id":self.user_id,
+            "username":self.username,
+            "email":self.email,
+            "is_superuser":self.is_superuser,
+            "is_verified":self.is_verified
+        }
+    
     def verify_password(self, raw_password):
         # print(pbkdf2_sha256.verify(raw_password, self.password))
         return pbkdf2_sha256.verify(raw_password, self.password)

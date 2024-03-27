@@ -13,7 +13,16 @@ from flask_restx import Api, Resource, fields
 from core import init_app
 
 
-api=Api(app=app, title='Book Store Api',security='apiKey', doc="/docs")
+api=Api(app=app, title='Book Store Api',security='apiKey',
+        authorizations={
+            'apiKey':{
+                'type':'apiKey',
+                'in':'header',
+                'required':True,
+                'name':'Authorization'
+            }
+        }, 
+        doc="/docs")
 
 @api.route('/register','/delete')
 class UserApi(Resource):
@@ -131,6 +140,17 @@ class ResetPassword(Resource):
             return {"message":"Unable to reset password","status":400},400
         except Exception as e:
             return {"message":str(e),"status":400},400
+        
+
+@app.route('/getUser',methods=["GET"])
+def get():
+        user_id=request.args.get("user_id")
+        if not user_id:
+            return {"message":"User not found","status":400},400
+        user=User.query.get(user_id)
+        if not user:
+            return {"message":"Invalid User","status":400},400
+        return {"message":"User data fetched successfully","status":200, 'data': user.to_json},200
 
 
 
