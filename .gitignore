@@ -6,3 +6,5 @@
 /user/__pycache__
 /book/migrations
 /book/__pycache__
+/cart/migrations
+/cart/__pycache__
