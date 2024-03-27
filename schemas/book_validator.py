@@ -8,5 +8,5 @@ class BookValidator(BaseModel):
     price : int
     quantity : int
     userid: int
-    quantity : int
+    
 

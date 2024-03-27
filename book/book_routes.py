@@ -5,7 +5,7 @@ from flask import request
 from book.book_model import Book
 from flask import g 
 from flask_jwt_extended.exceptions import JWTDecodeError
-from book.utils import authorize_user
+from core.utils import authorize_user
 
 from schemas.book_validator import BookValidator
 from flask import request
@@ -13,15 +13,27 @@ from book.book_model import Book
 
 
 
-api=Api(app=app, title='Book Api',security='apiKey', doc="/docs")
+api=Api(app=app, title='Book Api', security='apiKey',
+        authorizations={
+            'apiKey':{
+                'type':'apiKey',
+                'in':'header',
+                'required':True,
+                'name':'Authorization'
+            }
+        }, doc="/docs")
 
 @api.route('/addbook')
 class AddingBookApi(Resource):
-
-    @api.doc(params={"token":"token for adding books"},body=api.model('adding book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
+    method_decorators=[authorize_user]
+    @api.doc(headers={"Authorization":"token for adding books"},body=api.model('adding book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
     def post(self):
         try:
-            serializer=BookValidator(**request.json)
+            if not g.user['is_superuser']:
+                return {"message": "Access denied! You cannot perform this operation", "status": 403}, 403
+            data = request.json
+            data['user_id']=g.user['user_id']
+            serializer=BookValidator(**data)
             data=serializer.model_dump()
             book=Book(**data)
             db.session.add(book)
@@ -36,7 +48,7 @@ class AddingBookApi(Resource):
 @api.route('/getbook')
 class RetreivingBookApi(Resource):
 
-    @api.doc(params={"token":"token for retreiving book data"})
+    @api.doc(headers={"Authorization":"token for retreiving book data"})
     def get(self,*args,**kwargs):
         try:
             books=Book.query.all()
@@ -52,7 +64,7 @@ class RetreivingBookApi(Resource):
 class DeletingBookApi(Resource):
     method_decorators=[authorize_user]
     
-    @api.doc(params={"token":"token for deleting books"},body=api.model('deleting book',{"title":fields.String()}))
+    @api.doc(headers={"Authorization":"token for deleting books"},body=api.model('deleting book',{"title":fields.String()}))
     def delete(self, *args, **kwargs):
         try:
             if not g.user['is_superuser']:
@@ -75,7 +87,7 @@ class DeletingBookApi(Resource):
 @api.route('/updatebook')
 class UpdatingbookApi(Resource):
     method_decorators=[authorize_user]
-    @api.doc(params={"token":"token for updating books"},body=api.model('updating book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
+    @api.doc(headers={"Authorization":"token for updating books"},body=api.model('updating book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
     def put(self, *args, **kwargs):
         try:
             if not g.user['is_superuser']:
@@ -92,4 +104,53 @@ class UpdatingbookApi(Resource):
             return {"message": "Book updated successfully", "status": 200}, 200
         except Exception as e:
             return {"message": str(e), "status": 500}, 500
+        
+# @api.route('/getBook')
+# class getBookbyId(Resource):
+#     @api.expect(api.model('getting book by id',{'user_id':fields.Integer()}))
+#     def get(self,*args,**kwargs):
+#         try:
+            
+#             book=Book.query.filter_by('user_id')
+#             if not book:
+#                 return {"message":"Book not found","status":400},400
+#             return {"message":"Book fetched successfully","data":book.to_json,"status":200},200
+#         except Exception as e:
+#             return {"message":str(e),"status":400},400
+
+@app.route('/getBook',methods=['GET'])
+def get_book():
+    book_id=request.args.get("book_id")
+    if not book_id:
+        return {"message":"Book not found","status":400},400
+    book=Book.query.get(book_id)
+    if not book:
+        return {"message":"unable to fetch book data","status":400},400
+    return {"message":"book_id fetched successfully","data":book.to_json,"status":200},200
+
+@app.post('/validatebooks')
+def validate_books(*args,**kwargs):
+    try:
+        data=request.json
+        for id,quantity in data.items():
+            book=Book.query.filter_by(book_id=id).first()
+            if not book:
+                return {"message":"Book is not found","status":404},404
+            if book.quantity<quantity:
+                return {"message":"Insufficient quantity","status":400},400
+            return {"message":"All items are ready to order","status":200},200
+    except Exception as e:
+        return {"message":str(e),"status":500}
+
+@app.patch('/updatebooks')
+def update_books(*args,**kwargs):
+    try:
+        data=request.json
+        for id,quantity in data.items():
+            book=Book.query.filter_by(book_id=id).first()
+            book.quantity-=quantity
+        db.session.commit()
+        return {"message":"Book quantity updated successfully","status":200},200
+    except Exception as e:
+        return {"message":str(e),"status":500},500
         
