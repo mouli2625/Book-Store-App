@@ -26,7 +26,10 @@ api=Api(app=app, title='Book Api', security='apiKey',
 @api.route('/addbook')
 class AddingBookApi(Resource):
     method_decorators=[authorize_user]
-    @api.doc(headers={"Authorization":"token for adding books"},body=api.model('adding book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
+    @api.doc(headers={"Authorization":"token for adding books"},
+                body=api.model('adding book',{"title":fields.String(),
+                                        "author":fields.String(),"price":fields.Integer(),
+                                        "quantity":fields.Integer()}))
     def post(self):
         try:
             if not g.user['is_superuser']:
@@ -64,7 +67,8 @@ class RetreivingBookApi(Resource):
 class DeletingBookApi(Resource):
     method_decorators=[authorize_user]
     
-    @api.doc(headers={"Authorization":"token for deleting books"},body=api.model('deleting book',{"title":fields.String()}))
+    @api.doc(headers={"Authorization":"token for deleting books"},
+                body=api.model('deleting book',{"title":fields.String()}))
     def delete(self, *args, **kwargs):
         try:
             if not g.user['is_superuser']:
@@ -87,7 +91,10 @@ class DeletingBookApi(Resource):
 @api.route('/updatebook')
 class UpdatingbookApi(Resource):
     method_decorators=[authorize_user]
-    @api.doc(headers={"Authorization":"token for updating books"},body=api.model('updating book',{"title":fields.String(),"author":fields.String(),"price":fields.Integer(),"quantity":fields.Integer()}))
+    @api.doc(headers={"Authorization":"token for updating books"},
+                body=api.model('updating book',{"title":fields.String(),
+                                                "author":fields.String(),
+                                                "price":fields.Integer(),"quantity":fields.Integer()}))
     def put(self, *args, **kwargs):
         try:
             if not g.user['is_superuser']:

@@ -21,7 +21,7 @@ class User(db.Model):
         self.__dict__.update(kwargs)
         
         
-    @property    
+    @property
     def to_json(self):
         return {
             "user_id":self.user_id,

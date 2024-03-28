@@ -21,13 +21,16 @@ api=Api(app=app, title='Book Store Api',security='apiKey',
                 'required':True,
                 'name':'Authorization'
             }
-        }, 
+        },
         doc="/docs")
 
 @api.route('/register','/delete')
 class UserApi(Resource):
     
-    @api.expect(api.model('signingin',{'username':fields.String(),'email':fields.String(),'password':fields.String(),'superkey':fields.String(required=False)}))
+    @api.expect(api.model('signingin',{'username':fields.String(),
+                                        'email':fields.String(),
+                                        'password':fields.String(),
+                                        'superkey':fields.String(required=False)}))
     def post(self):
         try:
             serializer = UserValidator(**request.get_json())
@@ -44,12 +47,17 @@ class UserApi(Resource):
             return {"message":str(e),"status":400},400
     
     # @app.route('/register/delete',methods=["DELETE"])
-    @api.expect(api.model('Deleting',{'username':fields.String(),'email':fields.String(),'password':fields.String()}))
+    @api.expect(api.model('Deleting',{'username':fields.String(),
+                                        'email':fields.String(),
+                                        'password':fields.String()}))
     def delete(self):
         
         data=request.json
         try:
-            serializer=UserValidator(username=data['username'],password=data['password'],email=data['email'],superkey=data['superkey'])
+            serializer=UserValidator(username=data['username'],
+                                        password=data['password'],
+                                        email=data['email'],
+                                        superkey=data['superkey'])
             user=User.query.filter_by(username=data['username']).first()
             if user:
                 db.session.delete(user)
@@ -80,7 +88,9 @@ class LoginApi(Resource):
 @api.route('/verify')
 class VerifyApi(Resource):
     
-    @api.expect(api.model('verifying',{'username':fields.String(),'email':fields.String(),'password':fields.String()}))
+    @api.expect(api.model('verifying',{'username':fields.String(),
+                                        'email':fields.String(),
+                                        'password':fields.String()}))
     def get(self):
         try:
             token=request.args.get('token')
@@ -122,7 +132,8 @@ class ForgetPassword(Resource):
 @api.route('/reset')
 class ResetPassword(Resource):
 
-    @api.doc(params={"token":"token for reset password"},body=api.model('reset',{'new_password':fields.String()}))
+    @api.doc(params={"token":"token for reset password"},
+                body=api.model('reset',{'new_password':fields.String()}))
     def put(self):
         try:
             data=request.json
