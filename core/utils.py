@@ -5,6 +5,7 @@ import requests as http
 from flask import g
 
 
+
 def authorize_user(function):
     def wrapper(*args, **kwargs):
         try:
