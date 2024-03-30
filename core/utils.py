@@ -15,9 +15,9 @@ def authorize_user(function):
             payload = decode_token(token)
             result=payload.get('sub')
             response = http.get(f'http://127.0.0.1:5000/getUser?user_id={result}')
-            if response.status_code >= 400:
-                return {"message":"Something went wrong","status":401}, 400
-            user = response.json()['data']
+            if response.status_code >= 500:
+                return {"message":"Something went wrong","status":401}, 401
+            user = response.json()['user_data']
             g.user = user
             if request.method in ['POST', 'PUT','PATCH']:
                 request.json.update(userid=user['user_id'])
