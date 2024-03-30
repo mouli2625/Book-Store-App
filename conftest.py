@@ -1,9 +1,11 @@
 import pytest
 from core import init_app
-from user.user_routes import UserApi,LoginApi,VerifyApi,ForgetPassword,ResetPassword
 from user.user_model import db as user_db, User
 from book.book_model import db as book_db, Book
+from cart.cart_model import db as cart_db, Cart
+from user.user_routes import UserApi,LoginApi,VerifyApi,ForgetPassword,ResetPassword
 from book.book_routes import AddingBookApi,RetreivingBookApi,DeletingBookApi,UpdatingbookApi
+from cart.cart_routes import AddingCart,DeletingCart,OrderApi
 from flask_restx import Api
 
 @pytest.fixture
@@ -26,6 +28,7 @@ def user_app():
     with app.app_context():
         user_db.drop_all()
 
+@pytest.fixture
 def book_app():
     app=init_app('Book','test')
     book_db.init_app(app)
@@ -41,6 +44,25 @@ def book_app():
     with app.app_context():
         book_db.drop_all()
 
+
+
+@pytest.fixture
+def cart_app():
+    app=init_app('Cart','test')
+    cart_db.init_app(app)
+    with app.app_context():
+        cart_db.create_all()
+
+    api=Api(app)
+    api.add_resource(AddingCart,'/addcart')
+    api.add_resource(DeletingCart,'/deletecart')
+    api.add_resource(OrderApi,'/ordercart','/cancelcart')
+    yield app
+    with app.app_context():
+        cart_db.drop_all()
+
+
+
 @pytest.fixture
 def user_client(user_app):
     return user_app.test_client()
@@ -48,6 +70,10 @@ def user_client(user_app):
 @pytest.fixture
 def book_client(book_app):
     return book_app.test_client()
+
+@pytest.fixture
+def cart_client(cart_app):
+    return cart_app.test_client()
 
 @pytest.fixture
 def token(user_client,user_app):
